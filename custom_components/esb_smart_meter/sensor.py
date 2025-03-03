@@ -208,8 +208,8 @@ class ESBDataApi:
         # Login
        request_2_response = session.post('https://login.esbnetworks.ie/esbntwkscustportalprdb2c01.onmicrosoft.com/B2C_1A_signup_signin/SelfAsserted?tx=' + transId + '&p=B2C_1A_signup_signin', 
         data={
-          'signInName': esb_user_name, 
-          'password': esb_password, 
+          'signInName': self._username, 
+          'password': self._password, 
           'request_type': 'RESPONSE'
         },
         headers={
