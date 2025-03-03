@@ -1,9 +1,9 @@
 {
-    "domain": "esb_smart_meter",
+    "domain": "esb_smart_meter_reader",
     "name": "ESB Smart Meter",
-    "version": "1.0",
+    "version": "0.1",
     "requirements": ["requests", "beautifulsoup4"],
     "dependencies": [],
-    "codeowners": ["@robinj1995"],
+    "codeowners": ["@robinj1995", "@Ciaran97"],
     "config_flow": true
   }
