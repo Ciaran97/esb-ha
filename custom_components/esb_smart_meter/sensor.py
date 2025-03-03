@@ -186,53 +186,91 @@ class ESBDataApi:
 
         # Get CSRF token and stuff
         session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0'
-        })
-        login_page = session.get('https://myaccount.esbnetworks.ie/',
-                                 allow_redirects=True,
-                                 timeout=10)
+            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0',
+        }) 
+        
+        login_page = session.get('https://myaccount.esbnetworks.ie/', allow_redirects=True, timeout=10)
+        
         settings_var = re.findall(r"(?<=var SETTINGS = )\S*;", str(login_page.content))[0][:-1]
         settings = json.loads(settings_var)
 
-        session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0',
-            'x-csrf-token': settings['csrf'],
-        })
+        request_1_response_cookies = session.cookies.get_dict()
+        x_csrf_token = settings['csrf']
+        transId = settings['transId']
+
+        x_ms_cpim_sso = request_1_response_cookies.get('x-ms-cpim-sso:esbntwkscustportalprdb2c01.onmicrosoft.com_0')
+        x_ms_cpim_csrf = request_1_response_cookies.get('x-ms-cpim-csrf')
+        x_ms_cpim_trans = request_1_response_cookies.get('x-ms-cpim-trans')
+
+        sleeping_delay= randint(10,20)
+        sleep(sleeping_delay)
 
         # Login
-        login_response = session.post(
-            'https://login.esbnetworks.ie/esbntwkscustportalprdb2c01.onmicrosoft.com/B2C_1A_signup_signin/SelfAsserted?tx=' + settings['transId'] + '&p=B2C_1A_signup_signin', 
-            data={
-                'signInName': self._username, 
-                'password': self._password, 
-                'request_type': 'RESPONSE'
-            },
-            timeout=10)
-        login_response.raise_for_status()
+       request_2_response = session.post('https://login.esbnetworks.ie/esbntwkscustportalprdb2c01.onmicrosoft.com/B2C_1A_signup_signin/SelfAsserted?tx=' + transId + '&p=B2C_1A_signup_signin', 
+        data={
+          'signInName': esb_user_name, 
+          'password': esb_password, 
+          'request_type': 'RESPONSE'
+        },
+        headers={
+          'x-csrf-token': x_csrf_token,
+          'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0',
+          'Accept': 'application/json, text/javascript, */*; q=0.01',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Origin': 'https://login.esbnetworks.ie',
+          'Dnt': '1',
+          'Sec-Gpc': '1',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-origin',
+          'Priority': 'u=0',
+          'Te': 'trailers',
+        },
+        cookies={
+            'x-ms-cpim-csrf':request_1_response_cookies.get('x-ms-cpim-csrf'),
+        #    'x-ms-cpim-sso:esbntwkscustportalprdb2c01.onmicrosoft.com_0':request_1_response_cookies.get('x-ms-cpim-sso:esbntwkscustportalprdb2c01.onmicrosoft.com_0'),
+            'x-ms-cpim-trans':request_1_response_cookies.get('x-ms-cpim-trans'),
+        },
+        allow_redirects=False)
+
+        request_2_response_cookies = session.cookies.get_dict()
         
-        confirm_login_response = session.get('https://login.esbnetworks.ie/esbntwkscustportalprdb2c01.onmicrosoft.com/B2C_1A_signup_signin/api/CombinedSigninAndSignup/confirmed',
-                                             params={
-                                                'rememberMe': False,
-                                                'csrf_token': settings['csrf'],
-                                                'tx': settings['transId'],
-                                                'p': 'B2C_1A_signup_signin'
-                                             },
-                                             timeout=10)
-        confirm_login_response.raise_for_status()
-        soup = BeautifulSoup(confirm_login_response.content, 'html.parser')
-        form = soup.find('form', {'id': 'auto'})
-        state = form.find('input', {'name': 'state'})['value'],
-        client_info = form.find('input', {'name': 'client_info'})['value'],
-        code = form.find('input', {'name': 'code'})['value'],
-        session.post(
-            form['action'],
-            data={
-                'state': state,
-                'client_info': client_info,
-                'code': code
+        request_3_response = session.get(
+            'https://login.esbnetworks.ie/esbntwkscustportalprdb2c01.onmicrosoft.com/B2C_1A_signup_signin/api/CombinedSigninAndSignup/confirmed',
+            params={
+              'rememberMe': False,
+              'csrf_token': x_csrf_token,
+              'tx': transId,
+              'p': 'B2C_1A_signup_signin',
             },
-            timeout=10
-        ).raise_for_status()
+            headers={
+              "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0",
+              "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+              "Accept-Language": "en-US,en;q=0.5",
+              "Accept-Encoding": "gzip, deflate, br",
+              "Dnt": "1",
+              "Sec-Gpc": "1",
+              "Sec-Fetch-Dest": "document",
+              "Sec-Fetch-Mode": "navigate",
+              "Sec-Fetch-Site": "same-origin",
+              "Priority": "u=0, i",
+              "Pragma": "no-cache",
+              "Cache-Control": "no-cache",
+              "Te": "trailers",
+            },
+            cookies={
+                "x-ms-cpim-csrf":request_2_response_cookies.get("x-ms-cpim-csrf"),
+            #    "x-ms-cpim-sso:esbntwkscustportalprdb2c01.onmicrosoft.com_0": request_2_response_cookies.get("x-ms-cpim-sso:esbntwkscustportalprdb2c01.onmicrosoft.com_0"),
+                'x-ms-cpim-trans':request_2_response_cookies.get("x-ms-cpim-trans"),
+            },
+          )
+
+        tester_soup = BeautifulSoup(request_3_response.content, 'html.parser')
+        page_title = tester_soup.find("title")
+        request_3_response_cookies = session.cookies.get_dict()
         
         return session
     
